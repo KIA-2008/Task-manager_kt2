@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios'
 import { useMutation, useQuery } from '@apollo/client';
 import { ALL_TASKS } from './graphql/queries.js';
 import { CREATE_TASK, COMPLETE_TASK, DELETE_TASK } from './graphql/mutations.js';
@@ -55,6 +56,48 @@ function CreateTaskForm() {
     </form>
     {error && <p className="error">Не удалось создать задачу: {error.message}</p>}
   </section>;
+}
+
+function UploadImage() {
+  const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewURL] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [thumbnairUrl, setThumbnairUrl] = useState(null);
+  const [error, setError] = useState('');
+
+  function handleFileChange (event) {
+    const selected = event.target.files[0];
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setFile(selected ?? null);
+    setPreviewURL(selected ? URL.createObjectURL(selected) : null);
+    setProgress(0);
+    setThumbnairUrl(null);
+    setError('');
+  }
+
+  async function handleUpload() {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    setUploading(true);
+    setProgress(0);
+    setThumbnairUrl(null);
+    setError('');
+
+      try {
+        const response = await axios.post("http://localhost8000/upload", formData, {
+          omUploadProgress: ProgressEvent => {
+            if (ProgressEvent.total) {
+              const percent = Math.round((ProgressEvent.loaded *100) / ProgressEvent.total);
+              console.log();
+              
+            }
+          }
+        })
+      }
+  }
+  }
 }
 
 export default function App() {

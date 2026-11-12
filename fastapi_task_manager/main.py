@@ -3,6 +3,8 @@ import strawberry
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from strawberry.fastapi import GraphQLRouter
+from fastapi.staticfiles import StaticFiles
+from routers.upload import router as upload_router, UPLOAD_DIR
 
 
 @strawberry.type
@@ -92,6 +94,8 @@ app.add_middleware(CORSMiddleware, allow_origins = ["http://localhost:5173", "ht
 
 
 app.include_router(graphql_app, prefix="/graphql")
+app.include_router(upload_router)
+app.include_router("/static", StaticFiles(directory=UPLOAD_DIR), name="static")
 
 @app.get("/")
 def root():
