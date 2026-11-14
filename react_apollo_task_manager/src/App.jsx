@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios'
+import axios from 'axios';
 import { useMutation, useQuery } from '@apollo/client';
 import { ALL_TASKS } from './graphql/queries.js';
 import { CREATE_TASK, COMPLETE_TASK, DELETE_TASK } from './graphql/mutations.js';
@@ -10,9 +10,9 @@ function TaskList() {
     refetchQueries: [{ query: ALL_TASKS }],
   });
 
-  const [deleteTask, { error: deleteError}] = useMutation(DELETE_TASK, {
-    refetchQueries: [{ query: ALL_TASKS}],
-  })
+  const [deleteTask, { error: deleteError }] = useMutation(DELETE_TASK, {
+    refetchQueries: [{ query: ALL_TASKS }],
+  });
 
   if (loading) return <p>Загрузка задач...</p>;
   if (error) return <p className="error">Не удалось загрузить задачи: {error.message}</p>;
@@ -29,7 +29,7 @@ function TaskList() {
       <p>Категория: {task.category?.name ?? '—'} ({task.category?.color ?? '—'})</p>
       <p>Статус: {task.isCompleted ? 'Выполнена' : 'Не выполнена'}</p>
       {!task.isCompleted && <button onClick={() => completeTask({ variables: { taskId: Number(task.id) } })}>Отметить выполненной</button>}
-      <button onClick={() => deleteTask({variables: {taskId: Number(task.id) }}).catch(() => {} )}>Удалить</button>
+      <button onClick={() => deleteTask({ variables: { taskId: Number(task.id) } }).catch(() => { })}>Удалить</button>
     </article>)}
   </section>;
 }
@@ -45,7 +45,7 @@ function CreateTaskForm() {
     event.preventDefault();
     const trimmedTitle = title.trim();
     if (!trimmedTitle) return;
-    createTask({ variables: { title: trimmedTitle } }).catch(() => {});
+    createTask({ variables: { title: trimmedTitle } }).catch(() => { });
   }
 
   return <section>
@@ -60,46 +60,63 @@ function CreateTaskForm() {
 
 function UploadImage() {
   const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewURL] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [thumbnairUrl, setThumbnairUrl] = useState(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState(null);
   const [error, setError] = useState('');
-
-  function handleFileChange (event) {
+  function handleFileChange(event) {
     const selected = event.target.files[0];
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setFile(selected ?? null);
-    setPreviewURL(selected ? URL.createObjectURL(selected) : null);
+    setPreviewUrl(selected ? URL.createObjectURL(selected) : null);
     setProgress(0);
-    setThumbnairUrl(null);
+    setThumbnailUrl(null);
     setError('');
   }
-
   async function handleUpload() {
     if (!file) return;
     const formData = new FormData();
     formData.append('file', file);
     setUploading(true);
     setProgress(0);
-    setThumbnairUrl(null);
+    setThumbnailUrl(null);
     setError('');
-
-      try {
-        const response = await axios.post("http://localhost8000/upload", formData, {
-          omUploadProgress: ProgressEvent => {
-            if (ProgressEvent.total) {
-              const percent = Math.round((ProgressEvent.loaded *100) / ProgressEvent.total);
-              console.log();
-              
-            }
+    try {
+      const response = await axios.post('http://localhost:8000/upload', formData, {
+        onUploadProgress: progressEvent => {
+          if (progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`Загрузка: ${percent}%`);
+            setProgress(percent);
           }
-        })
-      }
+        },
+      });
+      setThumbnailUrl(response.data.thumbnail_url);
+    } catch (err) {
+      setError(err.response?.data?.detail ?? "Не удалось загрузить фото. Проверьте соединение с сервером.")
+    } finally {
+      setUploading(false);
+    }
   }
-  }
+  return <section>
+    <h2>Загрузка изображение</h2>
+    <input type="file" onChange={handleFileChange} />
+    {previewUrl && !thumbnailUrl && <div>
+      <p>Предпросмотр: </p>
+      <img className='preview' src={previewUrl} alt="Предпросмотр"/>
+    </div>}
+    <button onClick={handleUpload} disabled={!file || uploading}>{uploading ? 'Загрузка...' : 'Загрузить'} </button>
+
+      {(uploading || progress > 0) && <p>Прогресс: {progress}%</p>}
+      {error && <p className='error'> {error} </p>}
+      {thumbnailUrl && <div>
+        <p>Миниатюра с сервера: </p>
+        <img src={thumbnailUrl} alt="Миниатюра"/>
+      </div>  }
+    </section>;
 }
 
 export default function App() {
-  return <main><h1>Менеджер задач</h1><CreateTaskForm /><TaskList /></main>;
+  return <main><h1>Менеджер задач</h1><CreateTaskForm /><TaskList /> <UploadImage /> </main>;
 }

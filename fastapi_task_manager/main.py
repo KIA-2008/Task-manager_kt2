@@ -95,7 +95,7 @@ app.add_middleware(CORSMiddleware, allow_origins = ["http://localhost:5173", "ht
 
 app.include_router(graphql_app, prefix="/graphql")
 app.include_router(upload_router)
-app.include_router("/static", StaticFiles(directory=UPLOAD_DIR), name="static")
+app.mount("/static", StaticFiles(directory=UPLOAD_DIR), name="static")
 
 @app.get("/")
 def root():

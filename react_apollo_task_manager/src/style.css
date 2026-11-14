@@ -5,3 +5,11 @@ form { display: flex; gap: 8px; }
 input { flex: 1; padding: 10px; }
 button { padding: 10px 14px; cursor: pointer; }
 .error { color: #b00020; }
+
+.error{
+    color: rgb(159, 28, 28);}
+.preview {
+    max-width: 300px;
+    max-height: 300px;
+    display: block;
+}

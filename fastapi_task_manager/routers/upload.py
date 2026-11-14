@@ -10,7 +10,7 @@ router = APIRouter(tags=["upload"])
 BASE_DIR = Path(__file__).resolve().parent.parent
 UPLOAD_DIR = BASE_DIR / "uploads"
 ORIGINALS_DIR = UPLOAD_DIR / "originals"
-THUMBNAILS_DIR = UPLOAD_DIR / "thumbnails"
+THUMBNAILS_DIR = UPLOAD_DIR / "thumbnail"
 ORIGINALS_DIR.mkdir(parents=True, exist_ok=True)
 THUMBNAILS_DIR.mkdir(parents=True, exist_ok=True)
 
